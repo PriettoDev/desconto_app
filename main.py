@@ -1,24 +1,32 @@
-from src.models.desconto import DescontoVIP, DescontoNormal, DescontoPremium
-from src.models.pedido import Pedido
+from src.controllers.pedido_controller import PedidoController
+from src.repositories.pedido_repository import PedidoRepository
 from src.services.pedido_service import PedidoService
+from src.database.connection import DatabaseConnection
+from src.models.pedido import Pedido
+from src.models.desconto import DescontoVIP, DescontoNormal, DescontoPremium
 
 def main():
-    servico = PedidoService()
+    #Configuração do repositório, controller e serviço
+    database = DatabaseConnection()
+    repo = PedidoRepository(database)
+    service = PedidoService(repo)
+    controller = PedidoController(service)
 
-    pedido1 = Pedido("Leonardo", DescontoNormal())
-    pedido2 = Pedido("Pedro", DescontoVIP())
-    pedido3 = Pedido("Lucas", DescontoPremium())
+    #Criando pedido com desconto
+    pedido1 = Pedido("Cliente 1", desconto=DescontoNormal())
+    pedido1.valor_original=100
 
-    pedido1.valor_final(100)
-    pedido2.valor_final(200)
-    pedido3.valor_final(300)
+    pedido2 = Pedido("Cliente 2", desconto=DescontoVIP())
+    pedido2.valor_original=100
 
-    servico.adicionar_pedido(pedido1)
-    servico.adicionar_pedido(pedido2)
-    servico.adicionar_pedido(pedido3)
+    pedido3 = Pedido("Cliente 3", desconto=DescontoPremium())
+    pedido3.valor_original=100
 
-    servico.processar_pedidos()
+    controller.adicionar_pedido(pedido1)
+    controller.adicionar_pedido(pedido2)
+    controller.adicionar_pedido(pedido3)
 
+    controller.processar_pedidos()
 
 if __name__ == "__main__":
     main()
