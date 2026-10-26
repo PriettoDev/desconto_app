@@ -1,32 +1,38 @@
-from src.controllers.pedido_controller import PedidoController
-from src.repositories.pedido_repository import PedidoRepository
-from src.services.pedido_service import PedidoService
-from src.database.connection import DatabaseConnection
-from src.models.pedido import Pedido
-from src.models.desconto import DescontoVIP, DescontoNormal, DescontoPremium
+from src.app.frameworks.database.memory_database import MemoryDatabase
+from src.app.adapters.repositories.memory_pedido_repository import MemoryPedidoRepository
+from src.app.use_cases.criar_pedido import CriarPedido
+from src.app.adapters.controllers.pedido_controller import PedidoController
+from src.app.presenters.pedido_presenter import PedidoPresenter
 
-def main():
-    #Configuração do repositório, controller e serviço
-    database = DatabaseConnection()
-    repo = PedidoRepository(database)
-    service = PedidoService(repo)
-    controller = PedidoController(service)
 
-    #Criando pedido com desconto
-    pedido1 = Pedido("Cliente 1", desconto=DescontoNormal())
-    pedido1.valor_original=100
 
-    pedido2 = Pedido("Cliente 2", desconto=DescontoVIP())
-    pedido2.valor_original=100
+def main() -> None:
+    database = MemoryDatabase()
 
-    pedido3 = Pedido("Cliente 3", desconto=DescontoPremium())
-    pedido3.valor_original=100
+    pedido_gateway = MemoryPedidoRepository(database)
 
-    controller.adicionar_pedido(pedido1)
-    controller.adicionar_pedido(pedido2)
-    controller.adicionar_pedido(pedido3)
+    criar_pedido_use_case = CriarPedido(pedido_gateway)
 
-    controller.processar_pedidos()
+    presenter = PedidoPresenter()
+
+    controller = PedidoController(
+        criar_pedido_use_case=criar_pedido_use_case,
+        presenter=presenter
+        )
+
+    pedido1 = controller.criar_pedido("Cliente A", 100, "normal")
+    pedido2 = controller.criar_pedido("Cliente B", 200, "VIP")
+    pedido3 = controller.criar_pedido("Cliente C", 300, "Premium")
+
+    print("Pedido criados: ")
+    print(pedido1)
+    print(pedido2)
+    print(pedido3)
+
+    print("\nPedidos salvos:")
+    for pedido in controller.listar_pedidos():
+        print(pedido)
+
 
 if __name__ == "__main__":
     main()
